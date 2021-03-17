@@ -40,7 +40,7 @@ there are commonalities among them and there are common approaches that we'll
 discuss here. Generally speaking, there are two main uses for APIs––getting data
 and adding functionality (i.e. signing in with Facebook or posting to
 Instagram). We'll be discussing the "getting data" part of working with APIs
-here.
+here. 
 
 Many APIs are built on what is referred to as a REST-ful framework. That means
 that the "endpoints", or URLs to which we can send a request for data, follow
@@ -50,107 +50,98 @@ information, update information and delete information. Let's focus on the
 
 ### Retrieving Data from an API
 
-For this walk-through, we'll be working with the NYC Open Data API. Let's say
-we've been hired by the city to create an app that will help parents sign their
-children up for after-school activities. To connect parents to after-school
-clubs around the city, we need a data set of such clubs. Luckily for us, the
-city has collected that information and allows the public to access it via their
-Open Data API. Let's check out the documentation for their
-[after-school club data set][].
+For this walk-through, we'll be working with a mock API. Most of the APIs you'll be
+interacting with during this course will serve JSON data to you. 
 
-[after-school club data set]: https://dev.socrata.com/foundry/data.cityofnewyork.us/szgz-awuh
+It is important to note - The APIs we're accessing data from are run on servers in some form or
+another. What language those servers are running isn't actually relevant to our needs
+on the front-end. The server could be JavaScript, Ruby, Python, etc... The language doesn't
+matter because all of these languages are able to serve up JSON data. From the perspective
+of the front-end, we just need to know the endpoint we should to access to get the JSON data we need. 
 
-#### Finding the API Endpoint
+For this lesson, we've set up a [JSON file on GitHub][json-api] that contains some example data. In
+GitHub, this file can be [viewed like any other file][regular]. However, GitHub gives us the option to
+access files as raw data, which serves up the contents of the file directly. In essence, by serving
+the raw file data, any JSON file on GitHub can be turned into a static API.
 
-Take a few minutes and familiarize yourself with resource linked to above.
-Learning how to read API documentation is an important skill. It's okay if you
-don't understand everything in the above document. For now, just look it over
-briefly.
+### Scenario
 
-As you read through, you'll see that the documentation lists the API endpoint.
-**Endpoint** refers to the URL we can submit a request to and that will return
-to us the desired data.
+Let's say we've been hired by a school to create an app that will help students sign their
+up for after-school activities. To connect studentst to after-school
+activities around the school, we need a data set of those activities. Luckily for us, the
+school has collected that information and allows the public to access it via a specific 
+[API endpoint][json-api].
 
-Open up a new tab in your browser and paste in the following URL:
-`http://data.cityofnewyork.us/resource/uvks-tn5n.json`
-
-The page brings you to is the desired set of data! Notice that the data is laid
-out in what looks like a big array of nested hashes. This is actually a
-[JSON](http://json.org/) object, which behaves just like a Ruby hash. Working
-with the JSON data returned to you by requests to an API is one of the reasons
-why we spent so much time in previous lessons learning how to manipulate and
-operate on nested hashes.
+[json-api]: https://raw.githubusercontent.com/learn-co-curriculum/json-api-exampless/main/school-programs.json
+[regular]: https://github.com/learn-co-curriculum/json-api-exampless/blob/main/school-programs.json
 
 **Top Tip:** Once you find the right URL for retrieving your data, test it out
-directly in your browser *before* you try to request the data from inside your
-program. If pasting the URL into your browser brings you to the right data, you
-can move on. This cuts down on debugging time. This way, once you try to request
+directly *before* you try to request the data from inside your
+program. You can do this in a few ways - for public APIs, you can probably just paste
+the URL into your browser directly. For APIs that require Authentication, an app like Postman
+can be used to structure our a request. By doing this first, once you try to request
 the data from within your program, if it doesn't work, at least you'll know it's
 something wrong with your code, as opposed to something wrong with the API.
 
+#### Identifying the API Endpoint
+
+In this example, we've provided the endpoint, but you'll often have to figure out the correct endpoint
+on your own. Most APIs include documentation on how they can be used - make sure to take time to
+familiarize yourself using whatever documentation is provided. The documentation will oftten include
+what _endpoints_ are available on the API. **Endpoint** refers to the URL we can submit a request to and that will return
+to us the desired data.
+
+Open up a new tab in your browser and paste in the following URL:
+`https://raw.githubusercontent.com/learn-co-curriculum/json-api-exampless/main/school-programs.json`
+
+The page brings you to the desired set of data! Notice that the data is laid
+out in what looks like an array of nested objects. This is actually a
+[JSON](http://json.org/) object (or, at least, your browser's representation of it).
+
 #### Sending a Request to an API from a Program or Application
 
-Now that we understand what an API is and have even dealt with a URL that takes
-us to a real API endpoint, let's use that same URL to send a request for data
-from a Ruby program. Fork and clone this repo locally.
+Now that we understand what an API is and have an endpoint example that serves up some data,
+let's use that same URL to send a request for data from a JavaScript program.
 
 Open up `lib/nyc_api.rb`. Let's take a look at the code here:
 
-```ruby
-require 'net/http'
-require 'open-uri'
-require 'json'
+```js
+function getData(url) {
+  fetch(url)
+    .then(response => {
+      return response.json()
+    })
+    .then(data => {
+      return data
+    })
+}
 
-class GetPrograms
-
-  URL = "http://data.cityofnewyork.us/resource/uvks-tn5n.json"
-
-  def get_programs
-    uri = URI.parse(URL)
-    response = Net::HTTP.get_response(uri)
-    response.body
-  end
-
-end
-
-programs = GetPrograms.new.get_programs
-puts programs
-
+getData('http://data.cityofnewyork.us/resource/uvks-tn5n.json')
 ```
 
-We stored our API endpoint URL in a constant at the top of our class. Then, we
-have a `get_programs` method that uses the `NET::HTTP` library to send an HTTP
-request from our program. `NET::HTTP` is a Ruby library that allows your program
-or application to send HTTP requests. We require it at the top of our file with
-the `require` statement.  We also require the URI library which helps Ruby to
-handle URIs.
+We have a `getData` method that sends an HTTP GET request from our application
+via `fetch`.
 
-Both [NET::HTTP][`net/http`] and [URI][`open-uri`] are classes built into Ruby.
-Check out the links at the bottom of this lesson to read more about their usage.
-Don't worry too much about NET::HTTP and URI right now, though. Just focus on
-getting a basic understanding of and exposure to the tools we can use inside our
-applications to request data from an API.
-
-**A Note on Requirements:** We can use `require` statements to include libraries
-of code in our own programs. We can require libraries like `NET::HTTP`, or we
-can require gems, like Pry.
-
-Now, in your terminal in the directory of this lab, run `ruby lib/nyc_api.rb`. It
-should output the JSON response from the NYC Open Data API!
+Now, in your terminal in the directory of this lab, run `node app/nycAPI.js`. It
+should output the response from the NYC Open Data API!
 
 ### Working with API Data
 
 Now that we have all of our data back from the API, we need to be able to
-collect and present it within the context of our app. Since we are basically
-pros at manipulating nested hashes, we shouldn't have too much trouble. Let's
-write a method, `program_school`, that just returns a list of the schools or
+collect and present it within the context of our app. Since we've been practicing
+working with nested data structures, we shouldn't have too much trouble. Let's
+write a function, `programSchool`, that just returns a list of the schools or
 organizations that are running our after school programs.
 
 Copy and paste the following code into our GetPrograms class:
 
-```ruby
-def program_school
-# we use the JSON library to parse the API response into nicely formatted JSON
+```js
+function programSchool() {
+  //we use .json() to parse JSON into a useable object
+  getData('http://data.cityofnewyork.us/resource/uvks-tn5n.json')
+  
+}
+# 
   programs = JSON.parse(self.get_programs)
   programs.collect do |program|
     program["agency"]  
